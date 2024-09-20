@@ -24,7 +24,7 @@ export default function LandingPage() {
                 </nav>
             </header>
             <main className="flex-1">
-                <section className="w-full py-8 md:py-16 lg:py-24 xl:py-32 bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
+            <section className="w-full py-8 md:py-16 lg:py-24 xl:py-32 bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
                     <div className="container px-4 md:px-6">
                         <div className="flex flex-col items-center space-y-4 text-center">
                             <div className="space-y-2">

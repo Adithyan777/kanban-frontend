@@ -17,7 +17,7 @@ const withAuth = (WrappedComponent) => {
         if (!token) {
           toast({
             title: 'Token Not Found',
-            description: 'Please log in again',
+            description: 'Please Log In',
             variant: 'destructive',
           });
           router.push('/'); // Redirect to login if no token
