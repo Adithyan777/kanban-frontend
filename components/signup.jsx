@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from 'lucide-react'
 import useStateStore from '@/stores/stateStore';
-import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SignupCard() {
     const [username, setUsername] = useState('');
@@ -14,7 +14,7 @@ export default function SignupCard() {
     const [error, setError] = useState(null);
     const [isLoading,setIsLoading] = useState(false)
     const { getFullUrl } = useStateStore();
-    const router = useRouter();
+    const { toast } = useToast();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -28,10 +28,11 @@ export default function SignupCard() {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Signup failed');
-            localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('token', data.token);
+            toast({ 
+                title: 'Signup successful',
+                description: 'You can now login',
+                variant: 'success' });
             setIsLoading(false);
-            router.push('/todos');
 
         } catch (error) {
             setError(error.message);

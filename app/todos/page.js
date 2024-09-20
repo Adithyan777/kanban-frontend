@@ -1,5 +1,6 @@
 'use client';
 import React from 'react'
+import withAuth from '@/components/authHOC';
 
 function page() {
     const user = JSON.parse(localStorage.getItem('user'))
@@ -16,4 +17,4 @@ function page() {
   )
 }
 
-export default page
+export default withAuth(page)
