@@ -6,7 +6,6 @@ import TaskList from '@/components/taskList';
 function page() {
     const user = JSON.parse(localStorage.getItem('user'))
     const token = localStorage.getItem('token')
-    console.log(user)
 
   return (
     <div>

@@ -5,29 +5,150 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useToast } from '@/hooks/use-toast';
+import useStateStore from '@/stores/stateStore';
+import { DatePickerDemo } from './ui/datePicker';
 
-// Placeholder function for fetching tasks
-const fetchTasks = () => {
-    // This should be replaced with an actual API call
-    return Promise.resolve([
-        { _id: '1', title: 'Complete project',description: 'complete the project' , status: 'In Progress', priority: 'High', dueDate: '2024-10-01' },
-        { _id: '2', title: 'Review code', description: 'complete the projects' ,status: 'To Do', priority: 'Medium', dueDate: '2024-09-25' },
-        { _id: '3', title: 'Update documentation', description: 'complete the projectz' , status: 'Completed', priority: 'Low', dueDate: '2024-09-15' },
-        { _id: '4', title: 'Plan meeting', description: 'Plan the quarterly meeting', status: 'To Do', priority: 'High', dueDate: '2024-10-10' },
-        { _id: '5', title: 'Fix bugs', description: 'Fix the reported bugs', status: 'In Progress', priority: 'Medium', dueDate: '2024-09-30' },
-        { _id: '6', title: 'Deploy app', description: 'Deploy the new version of the app', status: 'Completed', priority: 'High', dueDate: '2024-09-20' }
-    ]);
-};
+const endpoint = '/todos';
 
 const TaskList = () => {
     const [tasks, setTasks] = useState([]);
     const [filter, setFilter] = useState({ status: 'all', priority: 'all' });
     const [sort, setSort] = useState({ field: 'dueDate', order: 'asc' });
     const [search, setSearch] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+    const [editTask, setEditTask] = useState(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const { getFullUrl } = useStateStore();
+    const [editDate, setEditDate] = useState(editTask ? editTask.dueDate : undefined);
+    const [date, setDate] = useState(undefined);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [taskToDelete, setTaskToDelete] = useState(null);
+    const { toast } = useToast();
 
     useEffect(() => {
-        fetchTasks().then(setTasks);
+        if (editTask) {
+            setEditDate(editTask.dueDate);
+        }
+    }, [editTask]);
+
+    useEffect(() => {
+        fetchTasks();
     }, []);
+
+    const fetchTasks = async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(getFullUrl(endpoint), {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            if (!response.ok) throw new Error('Failed to fetch tasks');
+            const data = await response.json();
+            setTasks(data);
+        } catch (error) {
+            console.error('Error fetching tasks:', error);
+            toast({ title: "Error", description: "Failed to fetch tasks", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCreateTask = async (task) => {
+        try {
+            const response = await fetch(getFullUrl(endpoint), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(task)
+            });
+            if (!response.ok) throw new Error('Failed to create task');
+            await fetchTasks();
+            toast({ title: "Success", description: "Task created successfully" , variant: "success"});
+        } catch (error) {
+            console.error('Error creating task:', error);
+            toast({ title: "Error", description: "Failed to create task", variant: "destructive" });
+        }
+    };
+
+    const handleUpdateTask = async (task) => {
+        try {
+            const response = await fetch(getFullUrl(`${endpoint}/${task._id}`), {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(task)
+            });
+            if (!response.ok) throw new Error('Failed to update task');
+            await fetchTasks();
+            toast({ title: "Success", description: "Task updated successfully" , variant: "success"});
+        } catch (error) {
+            console.error('Error updating task:', error);
+            toast({ title: "Error", description: "Failed to update task", variant: "destructive" });
+        }
+    };
+
+    const handleDeleteTask = async () => {
+        if (!taskToDelete) return;
+        try {
+            const response = await fetch(getFullUrl(`${endpoint}/${taskToDelete._id}`), {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            if (!response.ok) throw new Error('Failed to delete task');
+            await fetchTasks();
+            toast({ title: "Success", description: "Task deleted successfully", variant: "success" });
+        } catch (error) {
+            console.error('Error deleting task:', error);
+            toast({ title: "Error", description: "Failed to delete task", variant: "destructive" });
+        } finally {
+            setIsDeleteDialogOpen(false);
+            setTaskToDelete(null);
+        }
+    };
+
+    const validateTask = (task) => {
+        if (!task.title || task.title.trim() === '') return 'Title is required';
+        if (!task.status) return 'Status is required';
+        if (!task.priority) return 'Priority is required';
+        if (!task.dueDate) return 'Due date is required';
+        return null;
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const task = Object.fromEntries(formData.entries());
+
+        if(editTask){
+            task.dueDate = editDate ? editDate.split('T')[0] : '';
+        }else{
+            task.dueDate = date ? date.split('T')[0] : '';
+        }
+        
+        const error = validateTask(task);
+        if (error) {
+          toast({ title: "Validation Error", description: error, variant: "destructive" });
+          return;
+        }
+      
+        if (editTask) {
+            handleUpdateTask({ ...task, _id: editTask._id });
+        } else {
+            handleCreateTask(task);
+        }
+        setIsDialogOpen(false);
+        setEditTask(null);
+    };
 
     const priorityOrder = { 'Low': 1, 'Medium': 2, 'High': 3 };
 
@@ -39,11 +160,7 @@ const TaskList = () => {
         )
         .sort((a, b) => {
             if (sort.field === 'priority') {
-                const aPriority = priorityOrder[a.priority];
-                const bPriority = priorityOrder[b.priority];
-                if (aPriority < bPriority) return sort.order === 'asc' ? -1 : 1;
-                if (aPriority > bPriority) return sort.order === 'asc' ? 1 : -1;
-                return 0;
+                return (priorityOrder[a.priority] - priorityOrder[b.priority]) * (sort.order === 'asc' ? 1 : -1);
             } else {
                 if (a[sort.field] < b[sort.field]) return sort.order === 'asc' ? -1 : 1;
                 if (a[sort.field] > b[sort.field]) return sort.order === 'asc' ? 1 : -1;
@@ -74,71 +191,208 @@ const TaskList = () => {
         <div className="p-4">
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold">Task List</h1>
-                <Button><Plus className="mr-2 h-4 w-4" /> Add Task</Button>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button onClick={() => setEditTask(null)}><Plus className="mr-2 h-4 w-4" /> Add Task</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{editTask ? 'Edit Task' : 'Create Task'}</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleSubmit}>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="title" className="text-right">Title</Label>
+                                    <Input id="title" name="title" defaultValue={editTask?.title} className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="description" className="text-right">Description</Label>
+                                    <Input id="description" name="description" defaultValue={editTask?.description} className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="status" className="text-right">Status</Label>
+                                    <Select name="status" defaultValue={editTask?.status}>
+                                        <SelectTrigger className="col-span-3">
+                                            <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="To Do">To Do</SelectItem>
+                                            <SelectItem value="In Progress">In Progress</SelectItem>
+                                            <SelectItem value="Completed">Completed</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="priority" className="text-right">Priority</Label>
+                                    <Select name="priority" defaultValue={editTask?.priority}>
+                                        <SelectTrigger className="col-span-3">
+                                            <SelectValue placeholder="Select priority" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Low">Low</SelectItem>
+                                            <SelectItem value="Medium">Medium</SelectItem>
+                                            <SelectItem value="High">High</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="dueDate" className="text-right">Due Date</Label>
+                                    <DatePickerDemo date={date} setDate={setDate} />
+                                </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <Button type="submit">{editTask ? 'Update' : 'Create'}</Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
-
-            <div className="flex gap-4 mb-4">
-                <Input
-                    placeholder="Search tasks by title or description..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="max-w-sm"
-                />
-                <Select onValueChange={(value) => setFilter(prev => ({ ...prev, status: value }))}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="To Do">To Do</SelectItem>
-                        <SelectItem value="In Progress">In Progress</SelectItem>
-                        <SelectItem value="Completed">Completed</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select onValueChange={(value) => setFilter(prev => ({ ...prev, priority: value }))}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filter by priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Priorities</SelectItem>
-                        <SelectItem value="Low">Low</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="High">High</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="cursor-pointer" onClick={() => handleSort('title')}>Title</TableHead>
-                        <TableHead className="cursor-pointer" onClick={() => handleSort('description')}>Description</TableHead>
-                        <TableHead className="cursor-pointer" onClick={() => handleSort('status')}>Status</TableHead>
-                        <TableHead className="cursor-pointer" onClick={() => handleSort('priority')}>Priority</TableHead>
-                        <TableHead className="cursor-pointer" onClick={() => handleSort('dueDate')}>Due Date</TableHead>
-                        <TableHead>Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {filteredAndSortedTasks.map(task => (
-                        <TableRow key={task._id}>
-                            <TableCell>{task.title}</TableCell>
-                            <TableCell>{task.description}</TableCell>
-                            <TableCell>
-                                <Badge className={`${statusColor[task.status]} hover:${statusColor[task.status]}`}>{task.status}</Badge>
-                            </TableCell>
-                            <TableCell>
-                                <Badge className={`${priorityColor[task.priority]} hover:${priorityColor[task.priority]}`}>{task.priority}</Badge>
-                            </TableCell>
-                            <TableCell>{new Date(task.dueDate).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                                <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4" /></Button>
-                            </TableCell>
+            <div className="p-4">
+                <div className="flex gap-4 mb-4">
+                    <Input
+                        placeholder="Search tasks by title or description..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="max-w-sm"
+                    />
+                    <Select onValueChange={(value) => setFilter(prev => ({ ...prev, status: value }))}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            <SelectItem value="To Do">To Do</SelectItem>
+                            <SelectItem value="In Progress">In Progress</SelectItem>
+                            <SelectItem value="Completed">Completed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select onValueChange={(value) => setFilter(prev => ({ ...prev, priority: value }))}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by priority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Priorities</SelectItem>
+                            <SelectItem value="Low">Low</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="High">High</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="cursor-pointer" onClick={() => handleSort('title')}>Title</TableHead>
+                            <TableHead className="cursor-pointer" onClick={() => handleSort('description')}>Description</TableHead>
+                            <TableHead className="cursor-pointer" onClick={() => handleSort('status')}>Status</TableHead>
+                            <TableHead className="cursor-pointer" onClick={() => handleSort('priority')}>Priority</TableHead>
+                            <TableHead className="cursor-pointer" onClick={() => handleSort('dueDate')}>Due Date</TableHead>
+                            <TableHead>Actions</TableHead>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center">Loading tasks...</TableCell>
+                            </TableRow>
+                        ) : filteredAndSortedTasks.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center">No tasks found</TableCell>
+                            </TableRow>
+                        ) : (
+                            filteredAndSortedTasks.map(task => (
+                                <TableRow key={task._id}>
+                                    <TableCell>{task.title}</TableCell>
+                                    <TableCell>{task.description}</TableCell>
+                                    <TableCell>
+                                        <Badge className={`${statusColor[task.status]} hover:${statusColor[task.status]}`}>{task.status}</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge className={`${priorityColor[task.priority]} hover:${priorityColor[task.priority]}`}>{task.priority}</Badge>
+                                    </TableCell>
+                                    <TableCell>{new Date(task.dueDate).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" size="icon" onClick={() => setEditTask(task)}><Pencil className="h-4 w-4" /></Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Edit Task</DialogTitle>
+                                                </DialogHeader>
+                                                <form onSubmit={handleSubmit}>
+                                                    <div className="grid gap-4 py-4">
+                                                        <div className="grid grid-cols-4 items-center gap-4">
+                                                            <Label htmlFor="title" className="text-right">Title</Label>
+                                                            <Input id="title" name="title" defaultValue={task.title} className="col-span-3" />
+                                                        </div>
+                                                        <div className="grid grid-cols-4 items-center gap-4">
+                                                            <Label htmlFor="description" className="text-right">Description</Label>
+                                                            <Input id="description" name="description" defaultValue={task.description} className="col-span-3" />
+                                                        </div>
+                                                        <div className="grid grid-cols-4 items-center gap-4">
+                                                            <Label htmlFor="status" className="text-right">Status</Label>
+                                                            <Select name="status" defaultValue={task.status}>
+                                                                <SelectTrigger className="col-span-3">
+                                                                    <SelectValue placeholder="Select status" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="To Do">To Do</SelectItem>
+                                                                    <SelectItem value="In Progress">In Progress</SelectItem>
+                                                                    <SelectItem value="Completed">Completed</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div className="grid grid-cols-4 items-center gap-4">
+                                                            <Label htmlFor="priority" className="text-right">Priority</Label>
+                                                            <Select name="priority" defaultValue={task.priority}>
+                                                                <SelectTrigger className="col-span-3">
+                                                                    <SelectValue placeholder="Select priority" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="Low">Low</SelectItem>
+                                                                    <SelectItem value="Medium">Medium</SelectItem>
+                                                                    <SelectItem value="High">High</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div className="grid grid-cols-4 items-center gap-4">
+                                                            <Label htmlFor="dueDate" className="text-right">Due Date</Label>
+                                                            <DatePickerDemo date={editDate} setDate={setEditDate} />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-end">
+                                                        <Button type="submit">Update</Button>
+                                                    </div>
+                                                </form>
+                                            </DialogContent>
+                                        </Dialog>
+                                        <Button variant="ghost" size="icon" 
+                                            onClick={() => {
+                                                setTaskToDelete(task);
+                                                setIsDeleteDialogOpen(true);
+                                            }}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Confirm Deletion</DialogTitle>
+                </DialogHeader>
+                <p>Are you sure you want to delete this task?</p>
+                <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+                    <Button variant="destructive" onClick={handleDeleteTask}>Delete</Button>
+                </div>
+            </DialogContent>
+        </Dialog>
         </div>
     );
 };
