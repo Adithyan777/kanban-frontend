@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
 import useStateStore from '@/stores/stateStore';
 import { DatePickerDemo } from './ui/datePicker';
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 const endpoint = '/todos';
 
@@ -175,6 +176,11 @@ const TaskList = () => {
         }));
     };
 
+    const renderSortIndicator = (field) => {
+        if (sort.field !== field) return null;
+        return sort.order === 'asc' ? <ArrowUp className="inline h-4 w-4 ml-1" /> : <ArrowDown className="inline h-4 w-4 ml-1" />;
+    };
+
     const statusColor = {
         'To Do': 'bg-yellow-200 text-yellow-800',
         'In Progress': 'bg-blue-200 text-blue-800',
@@ -281,11 +287,21 @@ const TaskList = () => {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="cursor-pointer" onClick={() => handleSort('title')}>Title</TableHead>
-                            <TableHead className="cursor-pointer" onClick={() => handleSort('description')}>Description</TableHead>
-                            <TableHead className="cursor-pointer" onClick={() => handleSort('status')}>Status</TableHead>
-                            <TableHead className="cursor-pointer" onClick={() => handleSort('priority')}>Priority</TableHead>
-                            <TableHead className="cursor-pointer" onClick={() => handleSort('dueDate')}>Due Date</TableHead>
+                        <   TableHead className="cursor-pointer" onClick={() => handleSort('title')}>
+                                Title {renderSortIndicator('title')}
+                            </TableHead>
+                            <TableHead className="cursor-pointer" onClick={() => handleSort('description')}>
+                                Description {renderSortIndicator('description')}
+                            </TableHead>
+                            <TableHead className="cursor-pointer" onClick={() => handleSort('status')}>
+                                Status {renderSortIndicator('status')}
+                            </TableHead>
+                            <TableHead className="cursor-pointer" onClick={() => handleSort('priority')}>
+                                Priority {renderSortIndicator('priority')}
+                            </TableHead>
+                            <TableHead className="cursor-pointer" onClick={() => handleSort('dueDate')}>
+                                Due Date {renderSortIndicator('dueDate')}
+                            </TableHead>
                             <TableHead>Actions</TableHead>
                         </TableRow>
                     </TableHeader>
