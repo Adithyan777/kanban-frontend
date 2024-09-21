@@ -196,7 +196,7 @@ const TaskList = () => {
     return (
         <div className="p-4">
             <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold">Task List</h1>
+                <h1 className="text-3xl font-bold">Task List</h1>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button onClick={() => setEditTask(null)}><Plus className="mr-2 h-4 w-4" /> Add Task</Button>

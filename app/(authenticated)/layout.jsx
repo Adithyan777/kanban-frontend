@@ -15,14 +15,14 @@ const AppLayout = ({ children }) => {
   ];
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen flex-col md:flex-row">
       {/* Sidebar */}
-      <div className="w-60 bg-white shadow-md border-none">
-      <div className="flex items-center justify-center gap-2 h-16 border-b">
-            <Layout className="h-8 w-8 my-4 ml-6 text-blue-500" />
-            <h2 className="scroll-m-20 my-4 mr-7 text-2xl font-bold tracking-tight first:mt-0">
-                Kanban-Todo
-            </h2>
+      <div className="w-full md:w-60 bg-white shadow-md border-none">
+        <div className="flex items-center justify-center gap-2 h-16 border-b">
+          <Layout className="h-8 w-8 my-4 ml-6 text-blue-500" />
+          <h2 className="scroll-m-20 my-4 mr-7 text-2xl font-bold tracking-tight first:mt-0">
+            Kanban-Todo
+          </h2>
         </div>
         <nav className="mt-6">
           {navItems.map((item) => {
@@ -43,13 +43,6 @@ const AppLayout = ({ children }) => {
 
       {/* Main content */}
       <div className="flex-1 overflow-auto">
-        {/* <header className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-semibold text-gray-900">
-              {navItems.find(item => item.href === pathname)?.label || 'Dashboard'}
-            </h1>
-          </div>
-        </header> */}
         <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           {children}
         </main>
