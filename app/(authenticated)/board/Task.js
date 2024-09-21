@@ -1,48 +1,38 @@
-// app/(authenticated)/board/Task.js
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-export default function Task({ id, title, description, status, priority, dueDate }) {
+export default function Task({ id, title, description, priority, dueDate, status}) {
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
+    isDragging,
   } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  };
-
-  const priorityColors = {
-    Low: 'bg-green-100 text-green-800',
-    Medium: 'bg-yellow-100 text-yellow-800',
-    High: 'bg-red-100 text-red-800',
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
   };
 
   return (
-    <li
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="bg-white p-4 rounded shadow cursor-move"
+    <li 
+      ref={setNodeRef} 
+      style={style} 
+      {...attributes} 
+      {...listeners} 
+      className={`bg-white p-3 rounded shadow transition-all duration-300 ease-in-out ${isDragging ? 'shadow-lg scale-105' : ''}`}
     >
-      <h3 className="font-bold text-lg mb-2">{title}</h3>
-      <p className="text-sm text-gray-600 mb-2">{description}</p>
-      <div className="flex justify-between items-center">
-        <span className={`text-xs font-semibold px-2 py-1 rounded ${priorityColors[priority]}`}>
-          {priority}
-        </span>
-        {dueDate && (
-          <span className="text-xs text-gray-500">
-            Due: {new Date(dueDate).toLocaleDateString()}
-          </span>
-        )}
+      <h3 className="font-semibold">{title}</h3>
+      <p className="text-sm text-gray-600">{description}</p>
+      <div className="mt-2 text-xs text-gray-500">
+        <span className="mr-2">Priority: {priority}</span>
+        <span>Due: {new Date(dueDate).toLocaleDateString()}</span>
       </div>
-      <div className="text-xs text-gray-500 mt-2">{status}</div>
+      <div className="mt-2 text-xs text-gray-500">status: {status}</div>
     </li>
   );
 }
