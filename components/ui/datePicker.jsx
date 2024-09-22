@@ -17,7 +17,7 @@ export function DatePickerDemo({ date, setDate }) {
     const today = startOfToday();
     
     const handleDateSelect = (selectedDate) => {
-        if (selectedDate && !isBefore(selectedDate, today)) {
+        if (selectedDate) {
             setDate(format(selectedDate, "yyyy-MM-dd"));
         }
     };

@@ -194,60 +194,137 @@ const TaskList = () => {
         'High': 'bg-red-200 text-red-800'
     };
 
-    const TaskDialog = ({ task, isOpen, onOpenChange }) => (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>{task ? 'Edit Task' : 'Create Task'}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit}>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="title" className="text-right">Title</Label>
-                            <Input id="title" name="title" defaultValue={task?.title} className="col-span-3" />
+    const TaskDialog = ({ task, isOpen, onOpenChange }) => {
+        const [formState, setFormState] = useState({
+            title: task?.title || '',
+            description: task?.description || '',
+            status: task?.status || '',
+            priority: task?.priority || '',
+            dueDate: task?.dueDate || '',
+        });
+    
+        // Keep the form state synchronized with the task being edited (if any)
+        useEffect(() => {
+            if (task) {
+                setFormState({
+                    title: task.title || '',
+                    description: task.description || '',
+                    status: task.status || '',
+                    priority: task.priority || '',
+                    dueDate: task.dueDate || '',
+                });
+            }
+        }, [task]);
+    
+        const handleInputChange = (e) => {
+            const { name, value } = e.target;
+            setFormState((prevState) => ({
+                ...prevState,
+                [name]: value,
+            }));
+        };
+    
+        const handleDateChange = (selectedDate) => {
+            setFormState((prevState) => ({
+                ...prevState,
+                dueDate: selectedDate,
+            }));
+        };
+    
+        const handleSubmit = (e) => {
+            e.preventDefault();
+    
+            const error = validateTask(formState);
+            if (error) {
+                toast({ title: "Validation Error", description: error, variant: "destructive" });
+                return;
+            }
+    
+            if (task) {
+                handleUpdateTask({ ...formState, _id: task._id });
+            } else {
+                handleCreateTask(formState);
+            }
+    
+            onOpenChange(false);
+        };
+    
+        return (
+            <Dialog open={isOpen} onOpenChange={onOpenChange}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>{task ? 'Edit Task' : 'Create Task'}</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit}>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="title" className="text-right">Title</Label>
+                                <Input
+                                    id="title"
+                                    name="title"
+                                    value={formState.title}
+                                    onChange={handleInputChange}
+                                    className="col-span-3"
+                                />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="description" className="text-right">Description</Label>
+                                <Input
+                                    id="description"
+                                    name="description"
+                                    value={formState.description}
+                                    onChange={handleInputChange}
+                                    className="col-span-3"
+                                />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="status" className="text-right">Status</Label>
+                                <Select
+                                    name="status"
+                                    value={formState.status}
+                                    onValueChange={(value) => setFormState((prevState) => ({ ...prevState, status: value }))}
+                                >
+                                    <SelectTrigger className="col-span-3">
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="To Do">To Do</SelectItem>
+                                        <SelectItem value="In Progress">In Progress</SelectItem>
+                                        <SelectItem value="Completed">Completed</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="priority" className="text-right">Priority</Label>
+                                <Select
+                                    name="priority"
+                                    value={formState.priority}
+                                    onValueChange={(value) => setFormState((prevState) => ({ ...prevState, priority: value }))}
+                                >
+                                    <SelectTrigger className="col-span-3">
+                                        <SelectValue placeholder="Select priority" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Low">Low</SelectItem>
+                                        <SelectItem value="Medium">Medium</SelectItem>
+                                        <SelectItem value="High">High</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="dueDate" className="text-right">Due Date</Label>
+                                <DatePickerDemo date={formState.dueDate} setDate={handleDateChange} />
+                            </div>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="description" className="text-right">Description</Label>
-                            <Input id="description" name="description" defaultValue={task?.description} className="col-span-3" />
+                        <div className="flex justify-end">
+                            <Button type="submit">{task ? 'Update' : 'Create'}</Button>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="status" className="text-right">Status</Label>
-                            <Select name="status" defaultValue={task?.status}>
-                                <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="To Do">To Do</SelectItem>
-                                    <SelectItem value="In Progress">In Progress</SelectItem>
-                                    <SelectItem value="Completed">Completed</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="priority" className="text-right">Priority</Label>
-                            <Select name="priority" defaultValue={task?.priority}>
-                                <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Select priority" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Low">Low</SelectItem>
-                                    <SelectItem value="Medium">Medium</SelectItem>
-                                    <SelectItem value="High">High</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="dueDate" className="text-right">Due Date</Label>
-                            <DatePickerDemo date={task ? editDate : date} setDate={task ? setEditDate : setDate} />
-                        </div>
-                    </div>
-                    <div className="flex justify-end">
-                        <Button type="submit">{task ? 'Update' : 'Create'}</Button>
-                    </div>
-                </form>
-            </DialogContent>
-        </Dialog>
-    );
+                    </form>
+                </DialogContent>
+            </Dialog>
+        );
+    };
+    
 
     return (
         <div className="p-4">
