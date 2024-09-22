@@ -1,11 +1,11 @@
-'use client'
+'use client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import useStateStore from '@/stores/stateStore';
 import { useToast } from '@/hooks/use-toast';
 
 const withAuthRedirect = (WrappedComponent) => {
-  return (props) => {
+  const WithAuthRedirectComponent = (props) => {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const { getFullUrl } = useStateStore();
@@ -65,8 +65,10 @@ const withAuthRedirect = (WrappedComponent) => {
     // Render the wrapped component if not authenticated
     return <WrappedComponent {...props} />;
   };
-};
 
-withAuthRedirect.displayName = 'withAuthRedirect';
+  WithAuthRedirectComponent.displayName = `WithAuthRedirect(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
+
+  return WithAuthRedirectComponent;
+};
 
 export default withAuthRedirect;

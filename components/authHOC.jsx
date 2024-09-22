@@ -4,7 +4,7 @@ import useStateStore from '@/stores/stateStore';
 import { useToast } from '@/hooks/use-toast';
 
 const withAuth = (WrappedComponent) => {
-  return (props) => {
+  const WithAuthComponent = (props) => {
     const router = useRouter();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -72,6 +72,10 @@ const withAuth = (WrappedComponent) => {
 
     return null; // Don't render the component if not authenticated
   };
+
+  WithAuthComponent.displayName = `WithAuth(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
+
+  return WithAuthComponent;
 };
 
 export default withAuth;

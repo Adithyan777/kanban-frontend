@@ -21,7 +21,7 @@ function groupTasksByStatus(tasks) {
   }, {});
 }
 
-function page() {
+function Page() {
   const { getFullUrl } = useStateStore();
   const { toast } = useToast();
   const [tasks, setTasks] = useState({
@@ -66,5 +66,5 @@ function page() {
   );
 }
 
-export default withAuth(page);
+export default withAuth(Page);
 
