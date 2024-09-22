@@ -14,7 +14,6 @@ const getBaseUrl = () => {
 const useStateStore = create((set, get) => ({
   baseUrl: getBaseUrl(),
   getFullUrl: (endpoint) => `${get().baseUrl}${endpoint}`,
-  logout: () => set({ user: null, token: null }),
 }));
 
 export default useStateStore;

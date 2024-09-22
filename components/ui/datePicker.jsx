@@ -1,22 +1,23 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { format, parseISO } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import * as React from "react";
+import { format, parseISO, isBefore, startOfToday } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 
 export function DatePickerDemo({ date, setDate }) {
     const parsedDate = date ? parseISO(date) : null;
-
+    const today = startOfToday();
+    
     const handleDateSelect = (selectedDate) => {
-        if (selectedDate) {
+        if (selectedDate && !isBefore(selectedDate, today)) {
             setDate(format(selectedDate, "yyyy-MM-dd"));
         }
     };
@@ -27,7 +28,7 @@ export function DatePickerDemo({ date, setDate }) {
                 <Button
                     variant={"outline"}
                     className={cn(
-                        "w-[280px] justify-start text-left font-normal",
+                        "w-[240px] md:w-[280px] justify-start text-left font-normal",
                         !parsedDate && "text-muted-foreground"
                     )}
                 >
@@ -41,8 +42,9 @@ export function DatePickerDemo({ date, setDate }) {
                     selected={parsedDate}
                     onSelect={handleDateSelect}
                     initialFocus
+                    disabled={(date) => isBefore(date, today)}  // Disable past dates
                 />
             </PopoverContent>
         </Popover>
-    )
+    );
 }

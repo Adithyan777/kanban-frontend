@@ -164,7 +164,7 @@ export default function KanbanBoard({ tasks: initialTasks }) {
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
             >
-                <div className="flex gap-4">
+                <div className="flex flex-col md:flex-row gap-4">
                     {columnOrder.map((columnId) => (
                         <Column 
                             key={columnId} 

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
 import useStateStore from '@/stores/stateStore';
 import { DatePickerDemo } from './ui/datePicker';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUp, ArrowDown } from "lucide-react";
 
 const endpoint = '/todos';
@@ -193,76 +194,80 @@ const TaskList = () => {
         'High': 'bg-red-200 text-red-800'
     };
 
+    const TaskDialog = ({ task, isOpen, onOpenChange }) => (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>{task ? 'Edit Task' : 'Create Task'}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="title" className="text-right">Title</Label>
+                            <Input id="title" name="title" defaultValue={task?.title} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="description" className="text-right">Description</Label>
+                            <Input id="description" name="description" defaultValue={task?.description} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="status" className="text-right">Status</Label>
+                            <Select name="status" defaultValue={task?.status}>
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="To Do">To Do</SelectItem>
+                                    <SelectItem value="In Progress">In Progress</SelectItem>
+                                    <SelectItem value="Completed">Completed</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="priority" className="text-right">Priority</Label>
+                            <Select name="priority" defaultValue={task?.priority}>
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Select priority" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Low">Low</SelectItem>
+                                    <SelectItem value="Medium">Medium</SelectItem>
+                                    <SelectItem value="High">High</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="dueDate" className="text-right">Due Date</Label>
+                            <DatePickerDemo date={task ? editDate : date} setDate={task ? setEditDate : setDate} />
+                        </div>
+                    </div>
+                    <div className="flex justify-end">
+                        <Button type="submit">{task ? 'Update' : 'Create'}</Button>
+                    </div>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+
     return (
         <div className="p-4">
-            <div className="flex justify-between items-center mb-4">
-                <h1 className="text-3xl font-bold">Task List</h1>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button onClick={() => setEditTask(null)}><Plus className="mr-2 h-4 w-4" /> Add Task</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{editTask ? 'Edit Task' : 'Create Task'}</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleSubmit}>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="title" className="text-right">Title</Label>
-                                    <Input id="title" name="title" defaultValue={editTask?.title} className="col-span-3" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="description" className="text-right">Description</Label>
-                                    <Input id="description" name="description" defaultValue={editTask?.description} className="col-span-3" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="status" className="text-right">Status</Label>
-                                    <Select name="status" defaultValue={editTask?.status}>
-                                        <SelectTrigger className="col-span-3">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="To Do">To Do</SelectItem>
-                                            <SelectItem value="In Progress">In Progress</SelectItem>
-                                            <SelectItem value="Completed">Completed</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="priority" className="text-right">Priority</Label>
-                                    <Select name="priority" defaultValue={editTask?.priority}>
-                                        <SelectTrigger className="col-span-3">
-                                            <SelectValue placeholder="Select priority" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Low">Low</SelectItem>
-                                            <SelectItem value="Medium">Medium</SelectItem>
-                                            <SelectItem value="High">High</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="dueDate" className="text-right">Due Date</Label>
-                                    <DatePickerDemo date={date} setDate={setDate} />
-                                </div>
-                            </div>
-                            <div className="flex justify-end">
-                                <Button type="submit">{editTask ? 'Update' : 'Create'}</Button>
-                            </div>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+                <h1 className="text-3xl font-bold mb-4 sm:mb-0">Task List</h1>
+                <TaskDialog task={null} isOpen={isDialogOpen} onOpenChange={setIsDialogOpen} />
+                <Button onClick={() => { setEditTask(null); setIsDialogOpen(true); }}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Task
+                </Button>
             </div>
-            <div className="p-4">
-                <div className="flex gap-4 mb-4">
+            <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                     <Input
-                        placeholder="Search tasks by title or description..."
+                        placeholder="Search tasks..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="max-w-sm"
+                        className="w-full sm:w-auto"
                     />
                     <Select onValueChange={(value) => setFilter(prev => ({ ...prev, status: value }))}>
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-full sm:w-[180px]">
                             <SelectValue placeholder="Filter by status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -271,9 +276,9 @@ const TaskList = () => {
                             <SelectItem value="In Progress">In Progress</SelectItem>
                             <SelectItem value="Completed">Completed</SelectItem>
                         </SelectContent>
-                    </Select>
+                        </Select>
                     <Select onValueChange={(value) => setFilter(prev => ({ ...prev, priority: value }))}>
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-full sm:w-[180px]">
                             <SelectValue placeholder="Filter by priority" />
                         </SelectTrigger>
                         <SelectContent>
@@ -283,8 +288,9 @@ const TaskList = () => {
                             <SelectItem value="High">High</SelectItem>
                         </SelectContent>
                     </Select>
-                </div>
-                <Table>
+                    </div>
+                    <div className="hidden md:block">
+                    <Table>
                     <TableHeader>
                         <TableRow>
                         <   TableHead className="cursor-pointer" onClick={() => handleSort('title')}>
@@ -327,67 +333,9 @@ const TaskList = () => {
                                     </TableCell>
                                     <TableCell>{new Date(task.dueDate).toLocaleDateString()}</TableCell>
                                     <TableCell>
-                                        <Dialog>
-                                            <DialogTrigger asChild>
-                                                <Button variant="ghost" size="icon" onClick={() => setEditTask(task)}><Pencil className="h-4 w-4" /></Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <DialogHeader>
-                                                    <DialogTitle>Edit Task</DialogTitle>
-                                                </DialogHeader>
-                                                <form onSubmit={handleSubmit}>
-                                                    <div className="grid gap-4 py-4">
-                                                        <div className="grid grid-cols-4 items-center gap-4">
-                                                            <Label htmlFor="title" className="text-right">Title</Label>
-                                                            <Input id="title" name="title" defaultValue={task.title} className="col-span-3" />
-                                                        </div>
-                                                        <div className="grid grid-cols-4 items-center gap-4">
-                                                            <Label htmlFor="description" className="text-right">Description</Label>
-                                                            <Input id="description" name="description" defaultValue={task.description} className="col-span-3" />
-                                                        </div>
-                                                        <div className="grid grid-cols-4 items-center gap-4">
-                                                            <Label htmlFor="status" className="text-right">Status</Label>
-                                                            <Select name="status" defaultValue={task.status}>
-                                                                <SelectTrigger className="col-span-3">
-                                                                    <SelectValue placeholder="Select status" />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="To Do">To Do</SelectItem>
-                                                                    <SelectItem value="In Progress">In Progress</SelectItem>
-                                                                    <SelectItem value="Completed">Completed</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                        <div className="grid grid-cols-4 items-center gap-4">
-                                                            <Label htmlFor="priority" className="text-right">Priority</Label>
-                                                            <Select name="priority" defaultValue={task.priority}>
-                                                                <SelectTrigger className="col-span-3">
-                                                                    <SelectValue placeholder="Select priority" />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="Low">Low</SelectItem>
-                                                                    <SelectItem value="Medium">Medium</SelectItem>
-                                                                    <SelectItem value="High">High</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                        <div className="grid grid-cols-4 items-center gap-4">
-                                                            <Label htmlFor="dueDate" className="text-right">Due Date</Label>
-                                                            <DatePickerDemo date={editDate} setDate={setEditDate} />
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-end">
-                                                        <Button type="submit">Update</Button>
-                                                    </div>
-                                                </form>
-                                            </DialogContent>
-                                        </Dialog>
-                                        <Button variant="ghost" size="icon" 
-                                            onClick={() => {
-                                                setTaskToDelete(task);
-                                                setIsDeleteDialogOpen(true);
-                                            }}
-                                        >
+                                        <TaskDialog task={task} isOpen={editTask === task} onOpenChange={(open) => open ? setEditTask(task) : setEditTask(null)} />
+                                        <Button variant="ghost" size="icon" onClick={() => setEditTask(task)}><Pencil className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" onClick={() => { setTaskToDelete(task); setIsDeleteDialogOpen(true); }}>
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </TableCell>
@@ -397,8 +345,41 @@ const TaskList = () => {
                     </TableBody>
                 </Table>
             </div>
+            <div className="md:hidden">
+                    {isLoading ? (
+                        <p className="text-center">Loading tasks...</p>
+                    ) : filteredAndSortedTasks.length === 0 ? (
+                        <p className="text-center">No tasks found</p>
+                    ) : (
+                        filteredAndSortedTasks.map(task => (
+                            <Card key={task._id} className="mb-4">
+                                <CardHeader>
+                                    <CardTitle className="flex justify-between items-center">
+                                        <span>{task.title}</span>
+                                        <div>
+                                        <TaskDialog task={task} isOpen={editTask === task} onOpenChange={(open) => open ? setEditTask(task) : setEditTask(null)} />
+                                            <Button variant="ghost" size="icon" onClick={() => setEditTask(task)}><Pencil className="h-4 w-4" /></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => { setTaskToDelete(task); setIsDeleteDialogOpen(true); }}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="mb-2">{task.description}</p>
+                                    <div className="flex justify-between items-center">
+                                        <Badge className={`${statusColor[task.status]} hover:${statusColor[task.status]}`}>{task.status}</Badge>
+                                        <Badge className={`${priorityColor[task.priority]} hover:${priorityColor[task.priority]}`}>{task.priority}</Badge>
+                                        <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))
+                    )}
+                </div>
+            </div>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <DialogContent>
+                <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Confirm Deletion</DialogTitle>
                 </DialogHeader>
@@ -407,8 +388,8 @@ const TaskList = () => {
                     <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
                     <Button variant="destructive" onClick={handleDeleteTask}>Delete</Button>
                 </div>
-            </DialogContent>
-        </Dialog>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
