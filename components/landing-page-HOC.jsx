@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import useStateStore from '@/stores/stateStore';
 import { useToast } from '@/hooks/use-toast';
 
-function withAuthRedirect(WrappedComponent) {
+const withAuthRedirect = (WrappedComponent) => {
   return (props) => {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
@@ -66,5 +66,7 @@ function withAuthRedirect(WrappedComponent) {
     return <WrappedComponent {...props} />;
   };
 };
+
+withAuthRedirect.displayName = 'withAuthRedirect';
 
 export default withAuthRedirect;
