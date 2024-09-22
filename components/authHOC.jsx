@@ -1,3 +1,5 @@
+// HOC to check if user is authenticated
+
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import useStateStore from '@/stores/stateStore';

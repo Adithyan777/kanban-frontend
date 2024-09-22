@@ -1,3 +1,5 @@
+// outer layout for authenticated pages
+
 'use client'
 import React, { useState } from 'react';
 import Link from 'next/link';

@@ -76,4 +76,5 @@ function LandingPage() {
     )
 }
 
+// exporting through HOC for redirecting if already logged in
 export default withAuthRedirect(LandingPage);
